@@ -322,11 +322,12 @@ private[redshift] class RedshiftWriter(
       // S3, so let's first sanitize `tempdir` and make sure that it uses the s3:// scheme:
       val sanitizedTempDir = Utils.fixS3Url(
         Utils.removeCredentialsFromURI(URI.create(tempDir)).toString).stripSuffix("/")
+      val nonSanitized = Utils.removeCredentialsFromURI(URI.create(tempDir)).toString.stripSuffix("/")
       val manifestEntries = filesToLoad.map { file =>
         s"""{"url":"$sanitizedTempDir/$file", "mandatory":true}"""
       }
       val manifest = s"""{"entries": [${manifestEntries.mkString(",\n")}]}"""
-      val manifestPath = sanitizedTempDir + "/manifest.json"
+      val manifestPath = nonSanitized + "/manifest.json"
       val fsDataOut = fs.create(new Path(manifestPath))
       try {
         fsDataOut.write(manifest.getBytes("utf-8"))
